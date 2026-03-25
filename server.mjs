@@ -31,7 +31,9 @@ const server = http.createServer((request, response) => {
     const roomId = url.searchParams.get('room') || 'demo';
     const role = url.searchParams.get('role') === 'host' ? 'host' : 'audience';
     const clientId = url.searchParams.get('clientId');
-    sendJson(response, 200, getRoomState(roomId, role, clientId));
+    getRoomState(roomId, role, clientId)
+      .then((state) => sendJson(response, 200, state))
+      .catch((error) => sendJson(response, 500, { error: error instanceof Error ? error.message : 'State error.' }));
     return;
   }
 
@@ -44,7 +46,9 @@ const server = http.createServer((request, response) => {
       try {
         const action = body ? JSON.parse(body) : {};
         const roomId = action.roomId || 'demo';
-        sendJson(response, 200, applyAction(roomId, action));
+        applyAction(roomId, action)
+          .then((state) => sendJson(response, 200, state))
+          .catch((error) => sendJson(response, 500, { error: error instanceof Error ? error.message : 'Action error.' }));
       } catch (error) {
         sendJson(response, 400, { error: error instanceof Error ? error.message : 'Invalid request.' });
       }

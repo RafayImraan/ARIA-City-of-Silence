@@ -11,8 +11,8 @@ export default async function handler(req, res) {
   const role = action.role === 'host' ? 'host' : 'audience';
   const clientId = action.clientId || null;
 
-  touchPresence(roomId, role, clientId);
-  const state = applyAction(roomId, action);
+  await touchPresence(roomId, role, clientId);
+  const state = await applyAction(roomId, action);
   res.setHeader('Cache-Control', 'no-store');
   res.status(200).json(state);
 }

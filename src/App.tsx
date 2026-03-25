@@ -10,6 +10,7 @@ function App() {
   const params = new URLSearchParams(window.location.search);
   const audienceMode = params.get('audience') === '1';
   const roomId = params.get('room') || 'demo';
+  const demoMode = params.get('demo') === '1';
   const audiencePoll = useAudiencePoll(audienceMode ? 'audience' : 'host', roomId);
   const { state, decay, startGame, makeChoice, advanceCycle, setAriaObservation, setTabWarningTriggered } = useGame();
   const [fadeOut, setFadeOut] = useState(false);
@@ -47,6 +48,7 @@ function App() {
             onTabWarning={setTabWarningTriggered}
             audienceRoomId={roomId}
             audiencePoll={audiencePoll}
+            demoMode={demoMode}
           />
         )}
         {currentView === 'mirror' && <MirrorScreen state={state} decay={decay} />}

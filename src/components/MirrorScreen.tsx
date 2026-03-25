@@ -21,7 +21,7 @@ export default function MirrorScreen({ state }: Props) {
   const [reviewIdx, setReviewIdx] = useState(0);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setPhase('ending'), 1600);
+    const timer = window.setTimeout(() => setPhase('ending'), 1800);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -40,9 +40,9 @@ export default function MirrorScreen({ state }: Props) {
           window.setTimeout(() => {
             setLineIndex((value) => value + 1);
             setTyped('');
-          }, lineIndex === 0 ? 2600 : 4200);
+          }, lineIndex === 0 ? 3000 : 5000);
         } else {
-          window.setTimeout(() => setPhase('prompt'), 5000);
+          window.setTimeout(() => setPhase('prompt'), 6000);
         }
       }
     }, 95);
@@ -62,17 +62,22 @@ export default function MirrorScreen({ state }: Props) {
     <div className={`fixed inset-0 overflow-hidden bg-black ${phase === 'prompt' ? 'cursor-crosshair' : ''}`}>
       {(phase === 'black' || phase === 'ending' || phase === 'prompt') && (
         <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+          <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at center, rgba(255,183,64,0.05), transparent 32%)' }} />
+
           {phase !== 'black' && (
-            <div className="max-w-xl">
+            <div className="max-w-2xl">
+              <p className="editorial-kicker mb-8" style={{ color: 'rgba(255,183,64,0.42)' }}>
+                Final Assessment
+              </p>
               {ENDING_LINES.slice(0, lineIndex).map((line) => (
-                <p key={line} className="font-serif text-xl md:text-3xl mb-8" style={{ color: 'rgba(220,220,225,0.65)', lineHeight: 1.8 }}>
+                <p key={line} className="font-serif text-[30px] md:text-[46px] mb-9 leading-[1.2]" style={{ color: 'rgba(232,228,220,0.72)' }}>
                   {line}
                 </p>
               ))}
               {phase === 'ending' && (
-                <p className="font-serif text-xl md:text-3xl" style={{ color: 'rgba(220,220,225,0.65)', lineHeight: 1.8 }}>
+                <p className="font-serif text-[30px] md:text-[46px] leading-[1.2]" style={{ color: 'rgba(232,228,220,0.72)' }}>
                   {typed}
-                  <span className="inline-block h-5 w-[2px] ml-2 bg-white/30 animate-pulse" />
+                  <span className="inline-block h-7 w-[2px] ml-3 bg-white/30 animate-pulse" />
                 </p>
               )}
             </div>
@@ -81,8 +86,8 @@ export default function MirrorScreen({ state }: Props) {
           {phase === 'prompt' && (
             <button
               onClick={() => setPhase('review')}
-              className="absolute bottom-10 right-10 font-serif text-[11px] tracking-[0.18em]"
-              style={{ color: 'rgba(255,255,255,0.12)' }}
+              className="absolute bottom-10 right-10 font-serif text-[11px] tracking-[0.24em] uppercase"
+              style={{ color: 'rgba(255,255,255,0.1)' }}
             >
               Was it worth it?
             </button>
@@ -92,19 +97,22 @@ export default function MirrorScreen({ state }: Props) {
 
       {phase === 'review' && (
         <div className="absolute inset-0 overflow-y-auto px-6 py-10">
-          <div className="max-w-3xl mx-auto">
-            <div className="text-center mb-10">
-              <p className="font-display text-[10px] tracking-[0.4em] uppercase" style={{ color: 'rgba(0,229,255,0.34)' }}>
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-10">
+              <p className="editorial-kicker" style={{ color: 'rgba(0,229,255,0.36)' }}>
                 The Mirror
               </p>
-              <h1 className="text-3xl md:text-5xl mt-4" style={{ color: 'rgba(255,255,255,0.82)' }}>
-                I was never the one making decisions. You were.
+              <div className="editorial-rule mt-5 max-w-[180px]" />
+              <h1 className="font-serif text-[38px] md:text-[64px] leading-[0.96] tracking-[-0.03em] mt-6" style={{ color: 'rgba(248,244,236,0.92)' }}>
+                I was never the one making decisions.
+                <br />
+                You were.
               </h1>
             </div>
 
-            <div className="glass p-5 md:p-7">
-              <div className="flex items-center justify-between mb-5">
-                <p className="font-display text-[10px] tracking-[0.3em] uppercase" style={{ color: 'rgba(255,45,85,0.45)' }}>
+            <div className="story-panel">
+              <div className="flex items-center justify-between mb-6">
+                <p className="editorial-kicker" style={{ color: 'rgba(255,45,85,0.5)' }}>
                   Review
                 </p>
                 <p className="font-mono text-[10px]" style={{ color: 'rgba(255,255,255,0.32)' }}>
@@ -112,17 +120,17 @@ export default function MirrorScreen({ state }: Props) {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-white/6 bg-white/[0.02] p-5">
+              <div className="muted-surface p-5 md:p-6">
                 <p className="font-mono text-[10px] tracking-[0.18em] uppercase" style={{ color: 'rgba(0,229,255,0.34)' }}>
                   {reviewSummary[reviewIdx].cycle}
                 </p>
-                <h3 className="text-2xl mt-3" style={{ color: 'rgba(255,255,255,0.84)' }}>
+                <h3 className="font-serif text-[28px] md:text-[42px] leading-tight mt-3" style={{ color: 'rgba(248,244,236,0.9)' }}>
                   {reviewSummary[reviewIdx].title}
                 </h3>
-                <p className="font-display text-[11px] tracking-[0.14em] uppercase mt-5" style={{ color: 'rgba(255,183,64,0.46)' }}>
+                <p className="editorial-kicker mt-6" style={{ color: 'rgba(255,183,64,0.46)' }}>
                   You chose: {reviewSummary[reviewIdx].option.label}
                 </p>
-                <p className="font-serif text-[15px] mt-4 leading-8" style={{ color: 'rgba(220,220,228,0.64)' }}>
+                <p className="font-serif text-[16px] mt-4 leading-8 max-w-[52ch]" style={{ color: 'rgba(220,220,228,0.68)' }}>
                   "{reviewSummary[reviewIdx].option.logic}"
                 </p>
               </div>
@@ -134,13 +142,13 @@ export default function MirrorScreen({ state }: Props) {
                     className="h-[6px] rounded-full transition-all"
                     style={{
                       width: index === reviewIdx ? '18px' : '6px',
-                      background: index <= reviewIdx ? 'rgba(255,45,85,0.45)' : 'rgba(255,255,255,0.08)',
+                      background: index <= reviewIdx ? 'rgba(255,183,64,0.45)' : 'rgba(255,255,255,0.08)',
                     }}
                   />
                 ))}
               </div>
 
-              <div className="mt-6 flex flex-wrap gap-3">
+              <div className="mt-7 flex flex-wrap gap-3">
                 <button onClick={() => setReviewIdx((value) => Math.min(reviewSummary.length - 1, value + 1))} className="btn-primary">
                   Next Decision
                 </button>
@@ -158,14 +166,15 @@ export default function MirrorScreen({ state }: Props) {
 
       {phase === 'document' && (
         <div className="absolute inset-0 overflow-y-auto px-6 py-10">
-          <div className="max-w-3xl mx-auto glass p-6 md:p-8">
-            <button onClick={() => setPhase('review')} className="btn-ghost mb-6">
+          <div className="max-w-4xl mx-auto story-panel">
+            <button onClick={() => setPhase('review')} className="btn-ghost mb-8">
               Back To Mirror
             </button>
-            <p className="font-display text-[10px] tracking-[0.4em] uppercase" style={{ color: 'rgba(255,183,64,0.35)' }}>
+            <p className="editorial-kicker" style={{ color: 'rgba(255,183,64,0.4)' }}>
               Required Submission
             </p>
-            <div className="mt-5 whitespace-pre-wrap font-serif text-[15px] leading-8" style={{ color: 'rgba(220,220,228,0.64)' }}>
+            <div className="editorial-rule mt-5 max-w-[180px]" />
+            <div className="mt-6 whitespace-pre-wrap font-serif text-[16px] leading-8 max-w-[64ch]" style={{ color: 'rgba(223,223,230,0.7)' }}>
               {VILLAIN_LOGIC_DOCUMENT}
             </div>
           </div>

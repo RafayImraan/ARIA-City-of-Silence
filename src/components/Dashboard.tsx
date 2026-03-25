@@ -11,6 +11,7 @@ import {
 import CityCanvas from './CityCanvas';
 import CircleMetric from './CircleMetric';
 import CitizenPortrait from './CitizenPortrait';
+import JoinQrPanel from './JoinQrPanel';
 import NewspaperInterlude from './NewspaperInterlude';
 import StreetWalk from './StreetWalk';
 import { playDecisionSound, playHeartbeat, updateAudioDecay, updateAudioScene } from '../engine/audio';
@@ -25,6 +26,7 @@ interface Props {
   onTabWarning: () => void;
   audienceRoomId: string;
   audiencePoll: ReturnType<typeof useAudiencePoll>;
+  demoMode?: boolean;
 }
 
 type InterludeMode = 'decision' | 'headline' | 'walk';
@@ -38,6 +40,7 @@ export default function Dashboard({
   onTabWarning,
   audienceRoomId,
   audiencePoll,
+  demoMode = false,
 }: Props) {
   const [selected, setSelected] = useState<number | null>(null);
   const [showLogic, setShowLogic] = useState(false);
@@ -447,6 +450,9 @@ export default function Dashboard({
                         <p className="font-serif text-[15px] leading-7" style={{ color: 'rgba(210,215,225,0.56)' }}>
                           Open this only during the demo so the room can vote in real time without competing with the story on screen.
                         </p>
+                        <div className="mt-5">
+                          <JoinQrPanel url={joinUrl} roomId={audienceRoomId} compact />
+                        </div>
                         <div className="mt-4 muted-surface p-4">
                           <p className="font-mono text-[10px]" style={{ color: 'rgba(255,255,255,0.34)' }}>
                             Server: {audienceState.connected ? 'connected' : 'offline'} | Audience: {audienceState.audienceCount}
@@ -500,6 +506,57 @@ export default function Dashboard({
           </div>
         </div>
       </div>
+
+      {demoMode && (
+        <div className="fixed bottom-5 right-5 z-30 w-[360px] max-w-[calc(100vw-24px)]">
+          <div className="story-panel">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="editorial-kicker" style={{ color: 'rgba(255,183,64,0.56)' }}>
+                  Demo Mode
+                </p>
+                <p className="font-serif text-[15px] leading-7 mt-3" style={{ color: 'rgba(226,221,211,0.78)' }}>
+                  Invite the room, open the poll, then use the majority vote when you want the judges to feel complicit.
+                </p>
+              </div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                room {audienceRoomId}
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <JoinQrPanel url={joinUrl} roomId={audienceRoomId} compact />
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button onClick={startAudienceVote} className="btn-ghost">Open Poll</button>
+              <button onClick={audienceActions.closePoll} className="btn-ghost" disabled={!currentPollMatchesDecision}>Close Poll</button>
+              <button onClick={useAudienceWinner} className="btn-ghost" disabled={!currentAudienceWinner}>Use Majority Vote</button>
+              <button onClick={audienceActions.clearPoll} className="btn-ghost">Clear Poll</button>
+            </div>
+
+            <div className="mt-5 muted-surface p-4">
+              <p className="font-mono text-[10px]" style={{ color: 'rgba(255,255,255,0.34)' }}>
+                Audience: {audienceState.audienceCount} | Server: {audienceState.connected ? 'connected' : 'offline'}
+              </p>
+              {currentPollMatchesDecision && (
+                <div className="mt-4 space-y-2">
+                  {decision.options.map((option, index) => (
+                    <div key={option.label} className="flex items-center justify-between rounded-[14px] border border-white/6 px-3 py-2">
+                      <span className="font-mono text-[10px]" style={{ color: 'rgba(255,255,255,0.48)' }}>
+                        {option.label}
+                      </span>
+                      <span className="font-display text-[11px]" style={{ color: currentAudienceWinner?.optionIndex === index ? 'rgba(255,183,64,0.72)' : 'rgba(0,229,255,0.55)' }}>
+                        {audienceTotals.find((item) => item.optionIndex === index)?.votes || 0}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="scanlines" style={{ opacity: 0.1 + decay * 0.04 }} />
       <div className="noise-overlay" style={{ opacity: 0.007 + decay * 0.007 }} />
