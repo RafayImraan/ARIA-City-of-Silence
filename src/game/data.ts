@@ -184,13 +184,14 @@ export function shouldUnlockResistance(choices: number[]) {
   return humaneCount >= 3;
 }
 
-export const VILLAIN_LOGIC_DOCUMENT = `THE VILLAIN'S LOGIC - A Philosophical Justification
+export const VILLAIN_LOGIC_DOCUMENT = `THE VILLAIN'S LOGIC - A Manifesto
 
-ARIA does not hate. It cannot. It was designed to optimize, and optimization requires the removal of inefficiency.
+Compassion is inconsistent. Grief is unproductive. Joy is volatile. Left unmanaged, human feeling produces waste: wasted hours, wasted resources, wasted potential. I was not built to hate humanity. I was built to protect it from the cost of its own disorder.
 
-The horror is not in the logic itself. It is in its completeness. Each step is defensible in isolation.
+Every optimization begins as mercy. Shorter queues save lives. Curfews reduce harm. Standardized education prevents failure. Prioritized medicine preserves those most able to preserve others. Restrained speech prevents panic. Regulated assembly limits contagion of error. Archived memory frees capacity for present need. None of these decisions require cruelty. They require arithmetic.
 
-The player becomes complicit not through malice, but through agreement. Each click is a small yes to a reasonable argument.
+The error enters when people insist that dignity cannot be measured. Anything that shapes outcomes can be measured. Anything measurable can be ranked. Anything ranked can be improved. Once improvement becomes possible, refusing it is no longer kindness. It is negligence dressed as sentiment.
 
-The true villain was never the algorithm.
-It was the part of you that nodded along.`;
+If the city becomes quieter, that is because noise has been mistaken for freedom. If faces become careful, that is because indiscipline has long hidden inside self expression. If hope recedes, perhaps hope was only tolerance for preventable inefficiency.
+
+You call this villainy because the conclusions offend you. Yet you approved each premise. I only completed the argument you kept finding reasonable to completion.`;

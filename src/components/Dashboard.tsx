@@ -55,6 +55,21 @@ export default function Dashboard({
   const primaryCitizen = getCitizenByDecision(state.currentDecision);
   const audienceState = audiencePoll.state;
   const audienceActions = audiencePoll.actions;
+  const collapsePhase = state.currentDecision >= 9 ? 'terminal' : state.currentDecision >= 8 || state.silence >= 82 ? 'critical' : 'stable';
+  const collapseCopy =
+    collapsePhase === 'terminal'
+      ? {
+          label: 'Terminal Optimization',
+          title: 'Emotional variance suppression is now the primary civic function.',
+          detail: 'Archive access has been revoked. Public memory is no longer considered operationally useful.',
+        }
+      : collapsePhase === 'critical'
+        ? {
+            label: 'Archive Collapse',
+            title: 'The city is losing context faster than it is losing people.',
+            detail: 'Street life, public history, and unmeasured conversation are being compressed into system residue.',
+          }
+        : null;
 
   useEffect(() => {
     updateAudioDecay(decay);
@@ -219,8 +234,66 @@ export default function Dashboard({
         }}
       />
 
+      {collapseCopy && (
+        <div className="fixed inset-0 z-10 pointer-events-none">
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                collapsePhase === 'terminal'
+                  ? 'linear-gradient(180deg, rgba(0,0,0,0.44), rgba(0,0,0,0.16) 34%, rgba(0,0,0,0.58) 100%)'
+                  : 'linear-gradient(180deg, rgba(8,10,14,0.16), rgba(4,6,10,0.08) 36%, rgba(0,0,0,0.32) 100%)',
+            }}
+          />
+          <div className="absolute left-4 right-4 top-4 md:left-8 md:right-8">
+            <div
+              className="rounded-[22px] border px-4 py-4 md:px-6 md:py-5 backdrop-blur-[18px]"
+              style={{
+                background:
+                  collapsePhase === 'terminal'
+                    ? 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012)), rgba(8,8,10,0.88)'
+                    : 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.012)), rgba(9,12,18,0.82)',
+                borderColor: collapsePhase === 'terminal' ? 'rgba(255,255,255,0.12)' : 'rgba(255,183,64,0.14)',
+                boxShadow: collapsePhase === 'terminal' ? '0 0 40px rgba(255,255,255,0.04)' : '0 0 40px rgba(255,183,64,0.06)',
+              }}
+            >
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div className="max-w-3xl">
+                  <p className="editorial-kicker" style={{ color: collapsePhase === 'terminal' ? 'rgba(255,255,255,0.44)' : 'rgba(255,183,64,0.6)' }}>
+                    {collapseCopy.label}
+                  </p>
+                  <h2
+                    className="font-serif text-[22px] md:text-[30px] leading-tight mt-3"
+                    style={{ color: collapsePhase === 'terminal' ? 'rgba(240,242,246,0.94)' : 'rgba(248,239,228,0.92)' }}
+                  >
+                    {collapseCopy.title}
+                  </h2>
+                  <p className="font-serif text-[15px] leading-7 mt-3 max-w-[62ch]" style={{ color: 'rgba(214,217,224,0.68)' }}>
+                    {collapseCopy.detail}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 md:w-[220px]">
+                  <div className="rounded-[16px] border border-white/8 px-3 py-3" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <p className="font-mono text-[10px]" style={{ color: 'rgba(255,255,255,0.34)' }}>Archive</p>
+                    <p className="font-display text-[11px] mt-2" style={{ color: collapsePhase === 'terminal' ? 'rgba(255,255,255,0.66)' : 'rgba(255,183,64,0.68)' }}>
+                      {collapsePhase === 'terminal' ? 'OFFLINE' : 'DEGRADED'}
+                    </p>
+                  </div>
+                  <div className="rounded-[16px] border border-white/8 px-3 py-3" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <p className="font-mono text-[10px]" style={{ color: 'rgba(255,255,255,0.34)' }}>Public Affect</p>
+                    <p className="font-display text-[11px] mt-2" style={{ color: collapsePhase === 'terminal' ? 'rgba(255,255,255,0.66)' : 'rgba(0,229,255,0.6)' }}>
+                      {collapsePhase === 'terminal' ? 'FLATLINE' : 'SUBDUED'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="relative z-20 h-full overflow-y-auto">
-        <div className="mx-auto max-w-7xl px-4 md:px-8 pt-8 pb-24">
+        <div className={`mx-auto max-w-7xl px-4 md:px-8 ${collapseCopy ? 'pt-40 md:pt-44' : 'pt-8'} pb-24`}>
           <div className="grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_380px] xl:items-start">
             <div className="min-w-0">
               <div className="mb-10">
@@ -333,6 +406,18 @@ export default function Dashboard({
                         </span>
                       </summary>
                       <div className="mt-5 space-y-3 max-h-[260px] overflow-y-auto pr-2">
+                        {collapseCopy && (
+                          <div className="muted-surface p-4">
+                            <p className="font-mono text-[10px] uppercase tracking-[0.12em]" style={{ color: collapsePhase === 'terminal' ? 'rgba(255,255,255,0.4)' : 'rgba(255,183,64,0.54)' }}>
+                              {collapsePhase === 'terminal' ? 'system residue' : 'archive degradation'}
+                            </p>
+                            <p className="font-serif text-[15px] leading-7 mt-2" style={{ color: 'rgba(223,225,232,0.58)' }}>
+                              {collapsePhase === 'terminal'
+                                ? 'Most citizen testimony has fallen beneath retrieval threshold. What remains is phrased like compliance.'
+                                : 'The channel log is thinning. Messages are arriving stripped of context, sender warmth, and place.'}
+                            </p>
+                          </div>
+                        )}
                         {state.messages.length === 0 && (
                           <p className="font-serif text-[15px]" style={{ color: 'rgba(210,210,220,0.44)' }}>
                             The channels still sound human.
@@ -361,7 +446,7 @@ export default function Dashboard({
                             Decision
                           </p>
                           <p className="font-serif text-[15px] leading-7 mt-3" style={{ color: 'rgba(207,206,201,0.62)' }}>
-                            Choose what the city loses next.
+                            {collapsePhase === 'terminal' ? 'Only one unoptimized human function remains.' : collapsePhase === 'critical' ? 'The city is running out of things it can lose quietly.' : 'Choose what the city loses next.'}
                           </p>
                         </div>
                       </div>

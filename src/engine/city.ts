@@ -127,6 +127,8 @@ export function drawCity(
   const { detailLevel, effectsLevel } = quality;
   const popRatio = population / 12000;
   const hopeRatio = hope / 100;
+  const collapseLevel = Math.max(0, Math.min(1, (silence - 72) / 28));
+  const terminalCollapse = Math.max(0, Math.min(1, (silence - 88) / 12));
   const satMult = Math.max(0, 1 - decay * 1.3);
   const brightMult = Math.max(0.08, 1 - decay * 0.75);
   const detail = Math.max(0.3, detailLevel);
@@ -144,7 +146,7 @@ export function drawCity(
   ctx.fillRect(0, 0, w, h);
 
   // === STARS ===
-  const visibleStars = Math.floor(stars.length * Math.max(0.2, (1 - decay * 0.5) * detail));
+  const visibleStars = Math.floor(stars.length * Math.max(0, (1 - decay * 0.5) * detail * (1 - collapseLevel * 0.95)));
   for (let i = 0; i < visibleStars; i++) {
     const s = stars[i];
     const twinkle = Math.sin(time * s.twinkleSpeed + s.phase) * 0.5 + 0.5;
@@ -201,7 +203,7 @@ export function drawCity(
 
   // === BUILDINGS ===
   const sortedBuildings = buildings;
-  const aliveBuildings = Math.floor(sortedBuildings.length * Math.max(0.3, popRatio));
+  const aliveBuildings = Math.floor(sortedBuildings.length * Math.max(0.12, popRatio * (1 - collapseLevel * 0.82)));
   
   sortedBuildings.forEach((b, idx) => {
     const bx = (b.x / 100) * w;
@@ -213,8 +215,8 @@ export function drawCity(
 
     if (b.type === 'park') {
       // Parks: green patches that gray out
-      const parkSat = isAlive ? 50 * satMult : 5;
-      const parkLight = isAlive ? 25 * brightMult : 8;
+      const parkSat = isAlive ? 50 * satMult * (1 - collapseLevel * 0.92) : 5;
+      const parkLight = isAlive ? 25 * brightMult * (1 - collapseLevel * 0.6) : 8;
       const parkOp = isAlive ? (0.4 * brightMult) : 0.1;
       
       // Park ground
@@ -224,7 +226,7 @@ export function drawCity(
       ctx.fill();
       
       // Trees
-      if (isAlive && decay < 0.7 && detail > 0.5) {
+      if (isAlive && decay < 0.7 && detail > 0.5 && collapseLevel < 0.65) {
         const treeCount = Math.max(0, Math.min(3, Math.floor(1 + detail * 2) - Math.floor(decay * 4)));
         for (let t = 0; t < treeCount; t++) {
           const tx = bx - bw * 0.3 + t * bw * 0.3;
@@ -240,8 +242,8 @@ export function drawCity(
 
     // Building body
     const bodyHue = isAlive ? b.hue : 220;
-    const bodySat = isAlive ? 20 * satMult : 3;
-    const bodyLight = isAlive ? (12 + 5 * brightMult) : 5;
+    const bodySat = isAlive ? 20 * satMult * (1 - collapseLevel * 0.9) : 3;
+    const bodyLight = isAlive ? (12 + 5 * brightMult) * (1 - collapseLevel * 0.45) : 5;
     const bodyOp = 0.85;
 
     // Shadow
@@ -271,7 +273,7 @@ export function drawCity(
     if (b.floors > 0 && isAlive) {
       const windowsPerFloor = Math.max(1, Math.floor((bw / 5) * (0.65 + detail * 0.35)));
       const floorH = bh / b.floors;
-      const litMultiplier = b.windowsLit * hopeRatio * (1 - decay * 0.8);
+      const litMultiplier = b.windowsLit * hopeRatio * (1 - decay * 0.8) * (1 - collapseLevel * 0.96);
       
       for (let f = 0; f < b.floors; f++) {
         for (let wc = 0; wc < windowsPerFloor; wc++) {
@@ -340,7 +342,7 @@ export function drawCity(
     const dx = c.tx - c.x;
     const dy = c.ty - c.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    const moveSpeed = c.speed * Math.max(0.05, 1 - decay * 0.95);
+    const moveSpeed = c.speed * Math.max(0.005, (1 - decay * 0.95) * (1 - collapseLevel * 0.9));
     
     if (dist < 1) {
       c.tx = seeded(time * 100 + i * 7) * 100;
@@ -357,16 +359,17 @@ export function drawCity(
     const isHopeful = i < visibleCitizens * hopeRatio;
 
     const pulse = Math.sin(time * 2 + c.phase) * 0.3 + 0.7;
-    const cSat = c.hue > 0 ? 50 * satMult : 0;
-    const cLight = 50 * brightMult;
+    const cSat = c.hue > 0 ? 50 * satMult * (1 - collapseLevel * 0.96) : 0;
+    const cLight = 50 * brightMult * (1 - collapseLevel * 0.55);
     const cOp = isHopeful
       ? (0.3 + pulse * 0.4) * (1 - decay * 0.5)
       : (0.08 + pulse * 0.05) * (1 - decay * 0.7);
+    const collapseCitizenOpacity = cOp * (1 - collapseLevel * 0.82);
 
     // Citizen glow
     if (isHopeful && decay < 0.6 && effects > 0.55) {
       const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, cSize * 5);
-      cg.addColorStop(0, `hsla(${c.hue}, ${cSat}%, ${cLight}%, ${cOp * 0.4})`);
+      cg.addColorStop(0, `hsla(${c.hue}, ${cSat}%, ${cLight}%, ${collapseCitizenOpacity * 0.4})`);
       cg.addColorStop(1, 'transparent');
       ctx.fillStyle = cg;
       ctx.beginPath();
@@ -375,14 +378,14 @@ export function drawCity(
     }
 
     // Citizen dot
-    ctx.fillStyle = `hsla(${c.hue}, ${cSat}%, ${cLight}%, ${cOp})`;
+    ctx.fillStyle = `hsla(${c.hue}, ${cSat}%, ${cLight}%, ${collapseCitizenOpacity})`;
     ctx.beginPath();
     ctx.arc(cx, cy, cSize, 0, Math.PI * 2);
     ctx.fill();
   });
 
   // === CONNECTION LINES between citizens (community) ===
-  if (decay < 0.6 && effects > 0.5) {
+  if (decay < 0.6 && effects > 0.5 && collapseLevel < 0.35) {
     const lineOp = Math.max(0, 0.04 - decay * 0.06);
     const visibleForLines = citizens.slice(0, Math.min(visibleCitizens, Math.floor(20 + detail * 40)));
     for (let i = 0; i < visibleForLines.length; i++) {
@@ -430,7 +433,7 @@ export function drawCity(
   }
 
   // === FLOATING WORDS ===
-  if (decay < 0.75 && effects > 0.45) {
+  if (decay < 0.75 && effects > 0.45 && collapseLevel < 0.25) {
     const words = ['laughter', 'music', 'voices', 'footsteps', 'birdsong', 'children playing', 'dreams', 'hope'];
     const visibleWords = Math.max(2, Math.floor(words.length * effects));
     words.slice(0, visibleWords).forEach((word, i) => {
@@ -457,7 +460,7 @@ export function drawCity(
     for (let i = 0; i < rainCount; i++) {
       const rx = seeded(time * 1000 + i * 3) * w;
       const ry = seeded(time * 1000 + i * 7) * h;
-      ctx.fillStyle = `rgba(100, 110, 130, ${rainOp * seeded(i * 11 + time * 50)})`;
+      ctx.fillStyle = `rgba(100, 110, 130, ${(rainOp + collapseLevel * 0.06) * seeded(i * 11 + time * 50)})`;
       ctx.fillRect(rx, ry, 1, 2 + seeded(i) * 3);
     }
   }
@@ -474,7 +477,7 @@ export function drawCity(
     ctx.fillRect(0, waterY, w, waterH);
 
     // Reflections of building lights
-    if (decay < 0.7 && effects > 0.45) {
+    if (decay < 0.7 && effects > 0.45 && collapseLevel < 0.45) {
       sortedBuildings.forEach((b, index) => {
         if (index % (detail > 0.7 ? 1 : 2) !== 0) return;
         if (b.type === 'park') return;
@@ -509,7 +512,7 @@ export function drawCity(
     const fogLayers = effects > 0.7 ? 3 : 2;
     for (let layer = 0; layer < fogLayers; layer++) {
       const fogY = horizonY + (h - horizonY) * (0.15 + layer * 0.25);
-      const fogOp = Math.max(0, (0.03 + layer * 0.01) * (1 - decay * 0.5));
+      const fogOp = Math.max(0, (0.03 + layer * 0.01) * (1 - decay * 0.5) * (1 - collapseLevel * 0.65));
       const fogGrad = ctx.createLinearGradient(0, fogY - 15, 0, fogY + 15);
       fogGrad.addColorStop(0, 'transparent');
       fogGrad.addColorStop(0.5, `rgba(15, 20, 35, ${fogOp})`);
@@ -520,7 +523,7 @@ export function drawCity(
   }
 
   // === EMBERS / FIREFLIES ===
-  if (decay < 0.8 && effects > 0.4) {
+  if (decay < 0.8 && effects > 0.4 && collapseLevel < 0.4) {
     const emberCount = Math.max(0, Math.floor(25 * (1 - decay * 1.1) * effects));
     for (let i = 0; i < emberCount; i++) {
       const ex = (seeded(i * 67 + 2000) * 100 + Math.sin(time * 0.5 + i * 1.3) * 5);
@@ -556,12 +559,33 @@ export function drawCity(
   ctx.fillStyle = vig;
   ctx.fillRect(0, 0, w, h);
 
+  if (collapseLevel > 0) {
+    const blackoutGrad = ctx.createLinearGradient(0, 0, 0, h);
+    blackoutGrad.addColorStop(0, `rgba(0, 0, 0, ${0.12 + collapseLevel * 0.28})`);
+    blackoutGrad.addColorStop(0.65, `rgba(2, 4, 8, ${0.04 + collapseLevel * 0.12})`);
+    blackoutGrad.addColorStop(1, `rgba(0, 0, 0, ${0.18 + collapseLevel * 0.34})`);
+    ctx.fillStyle = blackoutGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    const bandCount = 2 + Math.floor(collapseLevel * 5);
+    for (let i = 0; i < bandCount; i++) {
+      const bandY = seeded(i * 131 + Math.floor(time * 40)) * h * 0.8 + h * 0.08;
+      const bandH = 12 + seeded(i * 157) * 38;
+      ctx.fillStyle = `rgba(210, 230, 255, ${0.015 + collapseLevel * 0.055})`;
+      ctx.fillRect(0, bandY, w, bandH);
+      ctx.fillStyle = `rgba(0, 0, 0, ${0.08 + collapseLevel * 0.18})`;
+      ctx.fillRect(0, bandY + bandH * 0.12, w, bandH * 0.76);
+    }
+  }
+
   // === HUD OVERLAY TEXT ===
-  const hudOp = Math.max(0.05, 0.3 - decay * 0.2);
+  const hudOp = Math.max(0.05, 0.3 - decay * 0.2) * (1 - collapseLevel * 0.45);
   ctx.font = "9px 'Orbitron', sans-serif";
   ctx.fillStyle = `rgba(0, 200, 230, ${hudOp})`;
   ctx.fillText('CITY OVERVIEW — LIVE FEED', 16, 24);
 
+  ctx.clearRect(12, 12, 230, 18);
+  ctx.fillText(collapseLevel > 0.62 ? 'CITY OVERVIEW | FEED DEGRADED' : 'CITY OVERVIEW | LIVE FEED', 16, 24);
   ctx.textAlign = 'right';
   ctx.fillStyle = `rgba(180, 185, 200, ${hudOp * 0.7})`;
   ctx.font = "9px 'IBM Plex Mono', monospace";
@@ -569,7 +593,7 @@ export function drawCity(
   ctx.textAlign = 'left';
 
   // Hope ember
-  if (hope > 0) {
+  if (hope > 0 && terminalCollapse < 0.95) {
     const hopePulse = Math.sin(time * 1.5) * 0.3 + 0.7;
     const hx = 20, hy = h - 24;
     const hopeSize = 3 * hopePulse * (hope / 100);
@@ -597,8 +621,22 @@ export function drawCity(
   if (silence > 30) {
     ctx.textAlign = 'right';
     ctx.font = "8px 'IBM Plex Mono', monospace";
-    ctx.fillStyle = `rgba(100, 105, 120, ${silence / 250})`;
-    ctx.fillText(silence > 80 ? '...' : `silence: ${silence}%`, w - 16, h - 20);
+    ctx.fillStyle = `rgba(100, 105, 120, ${silence / 250 + collapseLevel * 0.08})`;
+    ctx.fillText(silence > 92 ? 'AFFECT SUPPRESSED' : silence > 80 ? 'MEMORY OFFLINE' : `silence: ${silence}%`, w - 16, h - 20);
+    ctx.textAlign = 'left';
+  }
+
+  if (terminalCollapse > 0) {
+    ctx.fillStyle = `rgba(255, 255, 255, ${0.02 + terminalCollapse * 0.04})`;
+    for (let i = 0; i < 12; i++) {
+      const y = (i / 12) * h + Math.sin(time * 0.8 + i) * 2;
+      ctx.fillRect(0, y, w, 1);
+    }
+
+    ctx.textAlign = 'center';
+    ctx.font = "11px 'IBM Plex Mono', monospace";
+    ctx.fillStyle = `rgba(230, 235, 245, ${0.16 + terminalCollapse * 0.22})`;
+    ctx.fillText('CIVIC LIFE REDUCED TO BASELINE FUNCTION', w / 2, h * 0.78);
     ctx.textAlign = 'left';
   }
 }
